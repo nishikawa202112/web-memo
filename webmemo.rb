@@ -48,7 +48,6 @@ memofile = MemoFile.new
 
 get '/' do
   @memo_file = memofile.read_file
-    @memo_file
   erb :index
 end
 
