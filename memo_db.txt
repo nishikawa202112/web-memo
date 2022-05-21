@@ -1,0 +1,8 @@
+-- CREATE DATABASE memo_db;
+
+CREATE TABLE Memo_table
+(memo_id    CHAR(3)      NOT NULL,
+ title      VARCHAR(50)  ,
+ memo       VARCHAR(500) ,
+ PRIMARY KEY (memo_id));
+
