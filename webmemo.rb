@@ -7,11 +7,10 @@ require 'cgi/util'
 class MemoFile
   def read_file
     @memo_file = CSV.read('memofile.csv')
-    p @memo_file
     @memo_file.map.with_index(0) do |line, index|
       line.unshift(index.to_s)
     end
-    p @memo_file
+    @memo_file
   end
 
   def write_file(title, memo)
@@ -20,9 +19,9 @@ class MemoFile
     end
   end
 
-  def edit_file(edit_memo_file)
+  def edit_file(memos)
     CSV.open('memofile.csv', 'w') do |file|
-      edit_memo_file.each do |line|
+      memos.each do |line|
         file << [line[1], line[2]]
       end
     end
@@ -41,7 +40,7 @@ end
 memo_file = MemoFile.new
 
 get '/' do
-  @memo_file = memo_file.read_file
+  @memos = memo_file.read_file
   erb :index
 end
 
@@ -57,18 +56,20 @@ post '/memos' do
 end
 
 get '/memos/:memo_id' do
-  @select_id = params[:memo_id]
-  @memo_file = memo_file.read_file
-  @select_title = @memo_file[@select_id.to_i][1]
-  @select_memo = @memo_file[@select_id.to_i][2]
+  @select = {}
+  @select[:id] = params[:memo_id]
+  memos = memo_file.read_file
+  @select[:title] = memos[@select[:id].to_i][1]
+  @select[:memo] = memos[@select[:id].to_i][2]
   erb :showmemo
 end
 
 get '/memos/:memo_id/edit' do
-  @select_id = params[:memo_id]
-  @memo_file = memo_file.read_file
-  @select_title = @memo_file[@select_id.to_i][1]
-  @select_memo = @memo_file[@select_id.to_i][2]
+  @select = {}
+  @select[:id] = params[:memo_id]
+  memos = memo_file.read_file
+  @select[:title] = memos[@select[:id].to_i][1]
+  @select[:memo] = memos[@select[:id].to_i][2]
   erb :editmemo
 end
 
@@ -76,11 +77,10 @@ patch '/memos/:memo_id' do
   select_id = params[:memo_id]
   title = escape_html(params[:title])
   memo = escape_html(params[:memo]).gsub(/\R/, "\n")
-  edit_memo_file = memo_file.read_file
-  edit_memo_file[select_id.to_i][1] = title
-  edit_memo_file[select_id.to_i][2] = memo
-  p edit_memo_file
-  memo_file.edit_file(edit_memo_file)
+  memos = memo_file.read_file
+  memos[select_id.to_i][1] = title
+  memos[select_id.to_i][2] = memo
+  memo_file.edit_file(memos)
   redirect '/'
 end
 

@@ -1,11 +1,11 @@
-<h2><%= escape_html(@select_title) %></h2>
+<h2><%= @select[:title] %></h2>
 <p>
-  <%= @select_memo %>
+  <%= @select[:memo] %>
 </p>
-<form method="get" action="/memos/<%= @select_id %>/edit">
+<form method="get" action="/memos/<%= @select[:id] %>/edit">
   <button type="submit">変更</button>
 </form>
-<form method="post" action="/memos/<%= @select_id %>">
+<form method="post" action="/memos/<%= @select[:id] %>">
   <input name="_method" type="hidden" value="delete">
   <button type="submit">削除</button>
 </form>

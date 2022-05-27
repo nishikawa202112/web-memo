@@ -1,6 +1,6 @@
-<% if @memo_file %>
+<% if @memos %>
   <ul>
-    <% @memo_file.each do |memo| %>
+    <% @memos.each do |memo| %>
       <li>
         <a href="/memos/<%= memo[0] %>"><%= memo[1] %></a>
       </li>
