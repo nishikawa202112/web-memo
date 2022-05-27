@@ -1,11 +1,12 @@
-<% unless @memo_file == nil %>
+<% if @memo_file %>
   <ul>
-  <% @memo_file.each do |memo| %>
-    <li>
-    <a href="/showmemo/<%= memo[0] %>"><%= memo[1] %></a>
-    </li>
-  <% end %>
+    <% @memo_file.each do |memo| %>
+      <li>
+        <a href="/memos/<%= memo[0] %>"><%= memo[1] %></a>
+      </li>
+    <% end %>
   </ul>
 <% end %>
-
-<a href="/newmemo"><button>追加</button></a><br>
+<form method="get" action="/memos">
+  <button type="submit">追加</button></a><br>
+</form>

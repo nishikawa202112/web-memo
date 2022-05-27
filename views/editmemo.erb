@@ -1,11 +1,10 @@
-
-<form method="post" action="/edit/<%= @select_id %>">
+<form method="post" action="/memos/<%= @select_id %>">
   <input name="_method" type="hidden" value="patch">
   <div>
-  <input required type="text" name="title" value="<%= @select_title %>">
+    <input required type="text" name="title" value="<%= @select_title %>">
   </div>
   <div>
-  <textarea name="memo" required><%= @select_memo %></textarea>
+    <textarea name="memo" required ><%= @select_memo %></textarea>
   </div>
   <button type="submit">変更</button>
-</form>  
+</form>

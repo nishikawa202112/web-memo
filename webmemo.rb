@@ -1,96 +1,91 @@
 # frozen_string_literal: true
 
 require 'sinatra'
-enable :method_override
+require 'csv'
+require 'cgi/util'
 
 class MemoFile
   def read_file
-    if File.readable?('./public/memofile.txt')
-      File.open('./public/memofile.txt', 'r') do |f|
-        @memo_file = f.read.split('title=').map { |line| line.split('memo=') }
-      end
-      @memo_file.shift
-      @memo_file.map.with_index(0) do |line, index|
-        line.unshift(index.to_s)
-      end
+    @memo_file = CSV.read('memofile.csv')
+    p @memo_file
+    @memo_file.map.with_index(0) do |line, index|
+      line.unshift(index.to_s)
     end
-    @memo_file
+    p @memo_file
   end
 
   def write_file(title, memo)
-    File.open('./public/memofile.txt', 'a') do |f|
-      f.write("title=#{title}memo=#{memo}")
+    CSV.open('memofile.csv', 'a') do |file|
+      file << [title, memo]
     end
   end
 
-  def edit_file(memo_file)
-    memodata = +''
-    memo_file.each do |line|
-      memodata << +"title=#{line[1]}memo=#{line[2]}"
-    end
-    File.open('./public/memofile.txt', 'w') do |f|
-      f.write(memodata)
+  def edit_file(edit_memo_file)
+    CSV.open('memofile.csv', 'w') do |file|
+      edit_memo_file.each do |line|
+        file << [line[1], line[2]]
+      end
     end
   end
 
   def delete_file(select_id)
-    memodata = +''
-    @memo_file.each do |line|
-      memodata << +"title=#{line[1]}memo=#{line[2]}" unless line[0] == select_id
-    end
-    File.open('./public/memofile.txt', 'w') do |f|
-      f.write(memodata)
+    @memo_file.delete_if { |array| array[0] == select_id }
+    CSV.open('memofile.csv', 'w') do |file|
+      @memo_file.each do |array|
+        file << [array[1], array[2]]
+      end
     end
   end
 end
 
-memofile = MemoFile.new
+memo_file = MemoFile.new
 
 get '/' do
-  @memo_file = memofile.read_file
+  @memo_file = memo_file.read_file
   erb :index
 end
 
-get '/newmemo' do
+get '/memos' do
   erb :newmemo
 end
 
-post '/new' do
-  title = params[:title]
-  memo = params[:memo]
-  memofile.write_file(title, memo)
+post '/memos' do
+  title = escape_html(params[:title])
+  memo = escape_html(params[:memo]).gsub(/\R/, "\n")
+  memo_file.write_file(title, memo)
   redirect '/'
 end
 
-get '/showmemo/:memoid' do
-  @select_id = params[:memoid]
-  @memo_file = memofile.read_file
+get '/memos/:memo_id' do
+  @select_id = params[:memo_id]
+  @memo_file = memo_file.read_file
   @select_title = @memo_file[@select_id.to_i][1]
   @select_memo = @memo_file[@select_id.to_i][2]
   erb :showmemo
 end
 
-get '/showmemo/:memoid/edit' do
-  @select_id = params[:memoid]
-  @memo_file = memofile.read_file
+get '/memos/:memo_id/edit' do
+  @select_id = params[:memo_id]
+  @memo_file = memo_file.read_file
   @select_title = @memo_file[@select_id.to_i][1]
   @select_memo = @memo_file[@select_id.to_i][2]
   erb :editmemo
 end
 
-patch '/edit/:memoid' do
-  select_id = params[:memoid]
-  title = params[:title]
-  memo = params[:memo]
-  memo_file = memofile.read_file
-  memo_file[select_id.to_i][1] = title
-  memo_file[select_id.to_i][2] = memo
-  memofile.edit_file(memo_file)
+patch '/memos/:memo_id' do
+  select_id = params[:memo_id]
+  title = escape_html(params[:title])
+  memo = escape_html(params[:memo]).gsub(/\R/, "\n")
+  edit_memo_file = memo_file.read_file
+  edit_memo_file[select_id.to_i][1] = title
+  edit_memo_file[select_id.to_i][2] = memo
+  p edit_memo_file
+  memo_file.edit_file(edit_memo_file)
   redirect '/'
 end
 
-delete '/deletememo/:memoid' do
-  select_id = params[:memoid]
-  memofile.delete_file(select_id)
+delete '/memos/:memo_id' do
+  select_id = params[:memo_id]
+  memo_file.delete_file(select_id)
   redirect '/'
 end
