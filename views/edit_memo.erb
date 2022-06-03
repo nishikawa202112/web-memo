@@ -1,12 +1,12 @@
-<form method="post" action="/memos/<%= @id %>">
+<form method="post" action="/memos/<%= @memo[:id] %>">
   <input name="_method" type="hidden" value="patch">
   <div>
     Title<br>
-    <input required type="text" name="title" value="<%= @title %>">
+    <input required type="text" name="title" value="<%= @memo[:title] %>">
   </div>
   <div>
     Memo<br>
-    <textarea name="memo" required><%= @memo %></textarea>
+    <textarea name="memo" required><%= @memo[:memo] %></textarea>
   </div>
   <button type="submit">変更</button>
 </form>
