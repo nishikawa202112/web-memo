@@ -73,29 +73,23 @@ post '/memos' do
 end
 
 get '/memos/:memo_id' do
-  @memo = {}
-  @memo[:id] = params[:memo_id]
-  @memo = MemoFile.find(@memo[:id].to_i)
+  @memo = MemoFile.find(params[:memo_id].to_i)
   erb :show_memo
 end
 
 get '/memos/:memo_id/edit' do
-  @memo = {}
-  @memo[:id] = params[:memo_id]
-  @memo = MemoFile.find(@memo[:id].to_i)
+  @memo = MemoFile.find(params[:memo_id].to_i)
   erb :edit_memo
 end
 
 patch '/memos/:memo_id' do
-  id = params[:memo_id]
   title = escape_html(params[:title])
   memo = escape_html(params[:memo]).gsub(/\R/, "\n")
-  MemoFile.edit(id.to_i, title, memo)
+  MemoFile.edit(params[:memo_id].to_i, title, memo)
   redirect '/'
 end
 
 delete '/memos/:memo_id' do
-  id = params[:memo_id]
-  MemoFile.delete(id.to_i)
+  MemoFile.delete(params[:memo_id].to_i)
   redirect '/'
 end
