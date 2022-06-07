@@ -1,0 +1,10 @@
+<ul>
+  <% @memos.each do |memo| %>
+    <li>
+      <a href="/memos/<%= memo[:id] %>"><%= memo[:title] %></a>
+    </li>
+  <% end %>
+</ul>
+<form method="get" action="/memos">
+  <button type="submit">追加</button>
+</form>
