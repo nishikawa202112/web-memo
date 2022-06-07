@@ -11,22 +11,10 @@
 `web-memo`ディレクトリができるのでそのディレクトリに移動します。
 
 プルリクエストを`git fetch`します。
-
-プルリクエストは２つあります。（それぞれ別のディレクトリで行ってください）
-- webmemo
-
-  `$ git fetch origin pull/3/head:my-webmemo`
-   
-    新しいブランチが作られます。
-  
-    ブランチを移動します。
-   
-   `$ git checkout my-webmemo`
-  
   
 - webmemo(db)
 
-  `$ git fetch origin pull/2/head:my-webmemo-db`
+  `$ git fetch origin pull/4/head:my-webmemo-db`
   
     新しいブランチが作られます。
     
@@ -38,7 +26,6 @@
     
     `memo_db.txt`ファイルを参照し、データベースとそのテーブルを作成してください。
     
-ここからは上記共通の説明です。
 
 プログラムを起動します。
 
