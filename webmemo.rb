@@ -1,51 +1,48 @@
 # frozen_string_literal: true
 
 require 'sinatra'
-require 'csv'
+require 'pg'
 require 'cgi/util'
 
 class MemoFile
-  MEMO_FILE = 'memo_file.csv'
+  MEMO_FILE = 'memo_db'
   def self.read
-    memo_file = CSV.read(MEMO_FILE)
+    conn = PG.connect(dbname: MEMO_FILE)
     memo_list = []
-    memo_file.each.with_index do |memo, index|
-      memo_data = {}
-      memo_data[:id] = index
-      memo_data[:title] = memo[0]
-      memo_data[:memo] = memo[1]
-      memo_list << memo_data
+    conn.exec('SELECT * FROM Memo_table ORDER BY id') do |result|
+      result.each do |row|
+        row_data = {}
+        row_data[:id] = row['id']
+        row_data[:title] = row['title']
+        row_data[:memo] = row['memo']
+        memo_list << row_data
+      end
     end
     memo_list
   end
 
   def self.write(title, memo)
-    CSV.open(MEMO_FILE, 'a') do |file|
-      file << [title, memo]
-    end
+    memo_list = read
+    id =
+      if memo_list == []
+        '001'
+      else
+        (memo_list.map { |data| data[:id].to_i }.max + 1).to_s.rjust(3, '0')
+      end
+    conn = PG.connect(dbname: MEMO_FILE)
+    conn.exec("PREPARE memoplan (text,text) AS INSERT INTO Memo_table (id, title, memo) VALUES('#{id}',$1,$2)")
+    conn.exec("EXECUTE memoplan ('#{title}','#{memo}')")
   end
 
   def self.edit(id, title, memo)
-    memo_list = read
-    CSV.open(MEMO_FILE, 'w') do |file|
-      memo_list.each do |data|
-        if data[:id] == id
-          data[:title] = title
-          data[:memo] = memo
-        end
-        file << [data[:title], data[:memo]]
-      end
-    end
+    conn = PG.connect(dbname: MEMO_FILE)
+    conn.exec("PREPARE memoplan (text,text) AS UPDATE Memo_table SET title = $1, memo = $2 WHERE id = '#{id}'")
+    conn.exec("EXECUTE memoplan ('#{title}','#{memo}')")
   end
 
   def self.delete(id)
-    memo_list = read
-    memo_list.delete_if { |memo| memo[:id] == id }
-    CSV.open(MEMO_FILE, 'w') do |file|
-      memo_list.each do |memo|
-        file << [memo[:title], memo[:memo]]
-      end
-    end
+    conn = PG.connect(dbname: MEMO_FILE)
+    conn.exec("DELETE FROM Memo_table WHERE id = '#{id}'")
   end
 
   def self.find(id)
@@ -73,23 +70,23 @@ post '/memos' do
 end
 
 get '/memos/:memo_id' do
-  @memo = MemoFile.find(params[:memo_id].to_i)
+  @memo = MemoFile.find(params[:memo_id].rjust(3, '0'))
   erb :show_memo
 end
 
 get '/memos/:memo_id/edit' do
-  @memo = MemoFile.find(params[:memo_id].to_i)
+  @memo = MemoFile.find(params[:memo_id].rjust(3, '0'))
   erb :edit_memo
 end
 
 patch '/memos/:memo_id' do
   title = escape_html(params[:title])
   memo = escape_html(params[:memo]).gsub(/\R/, "\n")
-  MemoFile.edit(params[:memo_id].to_i, title, memo)
+  MemoFile.edit(params[:memo_id].rjust(3, '0'), title, memo)
   redirect '/'
 end
 
 delete '/memos/:memo_id' do
-  MemoFile.delete(params[:memo_id].to_i)
+  MemoFile.delete(params[:memo_id].rjust(3, '0'))
   redirect '/'
 end
