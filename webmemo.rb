@@ -4,10 +4,10 @@ require 'sinatra'
 require 'pg'
 require 'cgi/util'
 
-class MemoFile
-  MEMO_FILE = 'memo_db'
+class MemoDb
+  MEMO_DB = 'memo_db'
   def self.read
-    conn = PG.connect(dbname: MEMO_FILE)
+    conn = PG.connect(dbname: MEMO_DB)
     memo_list = []
     conn.exec('SELECT * FROM Memo_table ORDER BY id') do |result|
       result.each do |row|
@@ -22,26 +22,19 @@ class MemoFile
   end
 
   def self.write(title, memo)
-    memo_list = read
-    id =
-      if memo_list == []
-        '001'
-      else
-        (memo_list.map { |data| data[:id].to_i }.max + 1).to_s.rjust(3, '0')
-      end
-    conn = PG.connect(dbname: MEMO_FILE)
-    conn.exec("PREPARE memoplan (text,text) AS INSERT INTO Memo_table (id, title, memo) VALUES('#{id}',$1,$2)")
+    conn = PG.connect(dbname: MEMO_DB)
+    conn.exec('PREPARE memoplan (text,text) AS INSERT INTO Memo_table (title, memo) VALUES($1,$2)')
     conn.exec("EXECUTE memoplan ('#{title}','#{memo}')")
   end
 
   def self.edit(id, title, memo)
-    conn = PG.connect(dbname: MEMO_FILE)
+    conn = PG.connect(dbname: MEMO_DB)
     conn.exec("PREPARE memoplan (text,text) AS UPDATE Memo_table SET title = $1, memo = $2 WHERE id = '#{id}'")
     conn.exec("EXECUTE memoplan ('#{title}','#{memo}')")
   end
 
   def self.delete(id)
-    conn = PG.connect(dbname: MEMO_FILE)
+    conn = PG.connect(dbname: MEMO_DB)
     conn.exec("DELETE FROM Memo_table WHERE id = '#{id}'")
   end
 
@@ -54,7 +47,7 @@ class MemoFile
 end
 
 get '/' do
-  @memos = MemoFile.read
+  @memos = MemoDb.read
   erb :index
 end
 
@@ -65,28 +58,28 @@ end
 post '/memos' do
   title = escape_html(params[:title])
   memo = escape_html(params[:memo]).gsub(/\R/, "\n")
-  MemoFile.write(title, memo)
+  MemoDb.write(title, memo)
   redirect '/'
 end
 
 get '/memos/:memo_id' do
-  @memo = MemoFile.find(params[:memo_id].rjust(3, '0'))
+  @memo = MemoDb.find(params[:memo_id])
   erb :show_memo
 end
 
 get '/memos/:memo_id/edit' do
-  @memo = MemoFile.find(params[:memo_id].rjust(3, '0'))
+  @memo = MemoDb.find(params[:memo_id])
   erb :edit_memo
 end
 
 patch '/memos/:memo_id' do
   title = escape_html(params[:title])
   memo = escape_html(params[:memo]).gsub(/\R/, "\n")
-  MemoFile.edit(params[:memo_id].rjust(3, '0'), title, memo)
+  MemoDb.edit(params[:memo_id], title, memo)
   redirect '/'
 end
 
 delete '/memos/:memo_id' do
-  MemoFile.delete(params[:memo_id].rjust(3, '0'))
+  MemoDb.delete(params[:memo_id])
   redirect '/'
 end
