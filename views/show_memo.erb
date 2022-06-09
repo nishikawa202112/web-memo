@@ -1,6 +1,6 @@
-<h2><%= @memo[:title] %></h2>
+<h2><%= escape_html(@memo[:title]) %></h2>
 <p>
-  <%= @memo[:memo] %>
+  <%= escape_html(@memo[:memo]) %>
 </p>
 <form method="get" action="/memos/<%= @memo[:id] %>/edit">
   <button type="submit">変更</button>

@@ -5,3 +5,9 @@ CREATE TABLE Memo_table
  title      VARCHAR(50)  ,
  memo       VARCHAR(500) ,
  PRIMARY KEY (id));
+
+CREATE VIEW Memo_view (id, title, memo)
+AS
+SELECT *
+  FROM Memo_table;
+  

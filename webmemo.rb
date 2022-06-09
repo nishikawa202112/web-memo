@@ -9,7 +9,7 @@ class MemoDb
   def self.read
     conn = PG.connect(dbname: MEMO_DB)
     memo_list = []
-    conn.exec('SELECT * FROM Memo_table ORDER BY id') do |result|
+    conn.exec('SELECT * FROM Memo_view ORDER BY id') do |result|
       result.each do |row|
         row_data = {}
         row_data[:id] = row['id']
@@ -23,19 +23,20 @@ class MemoDb
 
   def self.write(title, memo)
     conn = PG.connect(dbname: MEMO_DB)
-    conn.exec('PREPARE memoplan (text,text) AS INSERT INTO Memo_table (title, memo) VALUES($1,$2)')
-    conn.exec("EXECUTE memoplan ('#{title}','#{memo}')")
+    conn.prepare('memoplan', 'INSERT INTO Memo_table (title, memo) VALUES($1,$2)')
+    conn.exec_prepared('memoplan', [title, memo])
   end
 
   def self.edit(id, title, memo)
     conn = PG.connect(dbname: MEMO_DB)
-    conn.exec("PREPARE memoplan (text,text) AS UPDATE Memo_table SET title = $1, memo = $2 WHERE id = '#{id}'")
-    conn.exec("EXECUTE memoplan ('#{title}','#{memo}')")
+    conn.prepare('memoplan', 'UPDATE Memo_table SET title = $2, memo = $3 WHERE id = $1')
+    conn.exec_prepared('memoplan', [id, title, memo])
   end
 
   def self.delete(id)
     conn = PG.connect(dbname: MEMO_DB)
-    conn.exec("DELETE FROM Memo_table WHERE id = '#{id}'")
+    conn.prepare('memoplan', 'DELETE FROM Memo_table WHERE id = $1')
+    conn.exec_prepared('memoplan', [id])
   end
 
   def self.find(id)
@@ -56,8 +57,8 @@ get '/memos' do
 end
 
 post '/memos' do
-  title = escape_html(params[:title])
-  memo = escape_html(params[:memo]).gsub(/\R/, "\n")
+  title = params[:title]
+  memo = params[:memo].gsub(/\R/, "\n")
   MemoDb.write(title, memo)
   redirect '/'
 end
@@ -73,8 +74,8 @@ get '/memos/:memo_id/edit' do
 end
 
 patch '/memos/:memo_id' do
-  title = escape_html(params[:title])
-  memo = escape_html(params[:memo]).gsub(/\R/, "\n")
+  title = params[:title]
+  memo = params[:memo].gsub(/\R/, "\n")
   MemoDb.edit(params[:memo_id], title, memo)
   redirect '/'
 end
