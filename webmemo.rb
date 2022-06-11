@@ -5,7 +5,6 @@ require 'pg'
 require 'cgi/util'
 
 class MemoDb
-
   MEMO_DB = 'memo_db'
 
   def initialize
@@ -27,21 +26,21 @@ class MemoDb
   end
 
   def write(title, memo)
-    @conn.prepare('memoplan','INSERT INTO Memo_table (title, memo) VALUES($1,$2)')
-    @conn.exec_prepared('memoplan',[title, memo])
-    @conn.exec("DEALLOCATE memoplan")
+    @conn.prepare('memoplan', 'INSERT INTO Memo_table (title, memo) VALUES($1,$2)')
+    @conn.exec_prepared('memoplan', [title, memo])
+    @conn.exec('DEALLOCATE memoplan')
   end
 
   def edit(id, title, memo)
     @conn.prepare('memoplan', 'UPDATE Memo_table SET title = $2, memo = $3 WHERE id = $1')
     @conn.exec_prepared('memoplan', [id, title, memo])
-    @conn.exec("DEALLOCATE memoplan")
+    @conn.exec('DEALLOCATE memoplan')
   end
 
   def delete(id)
     @conn.prepare('memoplan', 'DELETE FROM Memo_table WHERE id = $1')
     @conn.exec_prepared('memoplan', [id])
-    @conn.exec("DEALLOCATE memoplan")
+    @conn.exec('DEALLOCATE memoplan')
   end
 
   def find(id)
