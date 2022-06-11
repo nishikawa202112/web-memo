@@ -5,11 +5,16 @@ require 'pg'
 require 'cgi/util'
 
 class MemoDb
+
   MEMO_DB = 'memo_db'
-  def self.read
-    conn = PG.connect(dbname: MEMO_DB)
+
+  def initialize
+    @conn = PG.connect(dbname: MEMO_DB)
+  end
+
+  def read
     memo_list = []
-    conn.exec('SELECT * FROM Memo_view ORDER BY id') do |result|
+    @conn.exec('SELECT * FROM Memo_table ORDER BY id') do |result|
       result.each do |row|
         row_data = {}
         row_data[:id] = row['id']
@@ -21,25 +26,25 @@ class MemoDb
     memo_list
   end
 
-  def self.write(title, memo)
-    conn = PG.connect(dbname: MEMO_DB)
-    conn.prepare('memoplan', 'INSERT INTO Memo_table (title, memo) VALUES($1,$2)')
-    conn.exec_prepared('memoplan', [title, memo])
+  def write(title, memo)
+    @conn.prepare('memoplan','INSERT INTO Memo_table (title, memo) VALUES($1,$2)')
+    @conn.exec_prepared('memoplan',[title, memo])
+    @conn.exec("DEALLOCATE memoplan")
   end
 
-  def self.edit(id, title, memo)
-    conn = PG.connect(dbname: MEMO_DB)
-    conn.prepare('memoplan', 'UPDATE Memo_table SET title = $2, memo = $3 WHERE id = $1')
-    conn.exec_prepared('memoplan', [id, title, memo])
+  def edit(id, title, memo)
+    @conn.prepare('memoplan', 'UPDATE Memo_table SET title = $2, memo = $3 WHERE id = $1')
+    @conn.exec_prepared('memoplan', [id, title, memo])
+    @conn.exec("DEALLOCATE memoplan")
   end
 
-  def self.delete(id)
-    conn = PG.connect(dbname: MEMO_DB)
-    conn.prepare('memoplan', 'DELETE FROM Memo_table WHERE id = $1')
-    conn.exec_prepared('memoplan', [id])
+  def delete(id)
+    @conn.prepare('memoplan', 'DELETE FROM Memo_table WHERE id = $1')
+    @conn.exec_prepared('memoplan', [id])
+    @conn.exec("DEALLOCATE memoplan")
   end
 
-  def self.find(id)
+  def find(id)
     memo_list = read
     memo_list.each do |memo|
       return memo if memo[:id] == id
@@ -47,8 +52,10 @@ class MemoDb
   end
 end
 
+memofile = MemoDb.new
+
 get '/' do
-  @memos = MemoDb.read
+  @memos = memofile.read
   erb :index
 end
 
@@ -59,28 +66,28 @@ end
 post '/memos' do
   title = params[:title]
   memo = params[:memo].gsub(/\R/, "\n")
-  MemoDb.write(title, memo)
+  memofile.write(title, memo)
   redirect '/'
 end
 
 get '/memos/:memo_id' do
-  @memo = MemoDb.find(params[:memo_id])
+  @memo = memofile.find(params[:memo_id])
   erb :show_memo
 end
 
 get '/memos/:memo_id/edit' do
-  @memo = MemoDb.find(params[:memo_id])
+  @memo = memofile.find(params[:memo_id])
   erb :edit_memo
 end
 
 patch '/memos/:memo_id' do
   title = params[:title]
   memo = params[:memo].gsub(/\R/, "\n")
-  MemoDb.edit(params[:memo_id], title, memo)
+  memofile.edit(params[:memo_id], title, memo)
   redirect '/'
 end
 
 delete '/memos/:memo_id' do
-  MemoDb.delete(params[:memo_id])
+  memofile.delete(params[:memo_id])
   redirect '/'
 end
