@@ -51,10 +51,10 @@ class MemoDb
   end
 end
 
-memofile = MemoDb.new
+memo = MemoDb.new
 
 get '/' do
-  @memos = memofile.read
+  @memos = memo.read
   erb :index
 end
 
@@ -63,30 +63,26 @@ get '/memos' do
 end
 
 post '/memos' do
-  title = params[:title]
-  memo = params[:memo].gsub(/\R/, "\n")
-  memofile.write(title, memo)
+  memo.write(params[:title], params[:memo].gsub(/\R/, "\n"))
   redirect '/'
 end
 
 get '/memos/:memo_id' do
-  @memo = memofile.find(params[:memo_id])
+  @memo = memo.find(params[:memo_id])
   erb :show_memo
 end
 
 get '/memos/:memo_id/edit' do
-  @memo = memofile.find(params[:memo_id])
+  @memo = memo.find(params[:memo_id])
   erb :edit_memo
 end
 
 patch '/memos/:memo_id' do
-  title = params[:title]
-  memo = params[:memo].gsub(/\R/, "\n")
-  memofile.edit(params[:memo_id], title, memo)
+  memo.edit(params[:memo_id], params[:title], params[:memo].gsub(/\R/, "\n"))
   redirect '/'
 end
 
 delete '/memos/:memo_id' do
-  memofile.delete(params[:memo_id])
+  memo.delete(params[:memo_id])
   redirect '/'
 end
