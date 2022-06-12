@@ -2,11 +2,11 @@
   <input name="_method" type="hidden" value="patch">
   <div>
     Title<br>
-    <input required type="text" name="title" value="<%= @memo[:title] %>">
+    <input required type="text" name="title" value="<%= escape_html(@memo[:title]) %>">
   </div>
   <div>
     Memo<br>
-    <textarea name="memo" required><%= @memo[:memo] %></textarea>
+    <textarea name="memo" required><%= escape_html(@memo[:memo]) %></textarea>
   </div>
   <button type="submit">変更</button>
 </form>

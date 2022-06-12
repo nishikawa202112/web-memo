@@ -1,0 +1,7 @@
+CREATE DATABASE memo_db;
+
+CREATE TABLE Memo_table
+(id         serial,
+ title      VARCHAR(50)  ,
+ memo       VARCHAR(500) ,
+ PRIMARY KEY (id));
